@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Gambling Roulette</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="./main.css">
+
+    <script src='./web3.min.js'></script>
+    <script type="text/javascript" src="./abilist.js"></script>
+    <script defer type="text/javascript">
+        let accounts = null;
+        let gambleInstance = null;
+        let resultBox = null;
+        let statusBox = null;
+        let cntParti = null;
+        let partiList = null;
+        let rouletteList = null;
+        let requireBetAmt = null;
+
+        window.addEventListener('load', gamble);
+
+        /// Gamble Init
+        async function gamble() {
+            if (window.ethereum) {
+                resultBox = document.getElementById("resultBox");
+                statusBox = document.getElementById("statusBox");
+
+                let accountBtn = document.getElementById("accountBtn");
+                accountBtn.addEventListener('click', accountBtnClicked);
+            } else if (window.web3) {
+                // Dapp For supported browsers
+                window.web3 = new Web3(web3.currentProvider);
+            }
+            else {
+                // Dapp Not supported browser
+                window.web3 = null
+            }
+        }
+
+        /// Account connection
+        async function accountBtnClicked() {
+            // account Import (= Metamask account)
+            accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+
+            this.disabled = true;
+
+            const showAccount = document.getElementById("showAccount");
+            showAccount.innerHTML = accounts[0];
+
+            statusBox.innerHTML = "Account Connected"
+            getGambleInstance();
+        }
+
+        /// Create Gamble instance
+        async function getGambleInstance() {
+            // Deployed address (= not Metamask account)
+            // Gamble's address
+            let address = "0xBec3a4D47B4884e1E1E5694999929B070c292CCb";
+
+            window.web3 = new Web3(window.ethereum);
+
+            // Gamble's Contract creation
+            gambleInstance = await new window.web3.eth.Contract(gambleAbi, address);
+            initData();
+        }
+
+        /// Import contract data (initialization)
+        async function initData() {
+            let totalBet = document.getElementById("totalBet");
+            totalBet.innerText = await gambleInstance.methods.totalBet().call();
+            let baseBet = document.getElementById("baseBet");
+            baseBet.innerText = await gambleInstance.methods.baseBet().call();
+            let increaseRate = document.getElementById("increaseRate");
+            increaseRate.innerText = await gambleInstance.methods.increaseRate().call();
+            let requireBet = document.getElementById("requireBet");
+            requireBet.innerText = await gambleInstance.methods.requireBet().call();
+            let betAmt = document.getElementById("betAmt");
+            betAmt.value = 0;
+
+            let mainR = document.getElementById("mainSlot");
+            mainR.innerText = "Main Roulette";
+            let subR = document.getElementById("subSlot");
+            subR.innerText = "Sub Roulette";
+
+            cntParti = await gambleInstance.methods.numParticipants().call();
+            partiList = [];
+            for (let i = 0; i < cntParti; i++) {
+                let p = await gambleInstance.methods.participants(i).call();
+                partiList.push(p);
+            }
+
+            requireBetAmt = requireBet.innerText;
+            rouletteList = [
+                "Remittance of all bets to the current participant",
+                "Remittance of the entire bet amount to a specific participant",
+                "1% increase in stake increase rate",
+                "2% increase in stake increase rate",
+                "5% increase in stake increase rate",
+                "PASS"
+            ];
+
+            registerEventHandlers();
+        }
+
+        /// Associating a Dom object with an action function
+        async function registerEventHandlers() {
+            let mainBtn = document.getElementById("mainBtn");
+            mainBtn.addEventListener('click', launchMain);
+            let percentageBtn = document.getElementById("percentageBtn");
+            percentageBtn.disabled = false;
+            percentageBtn.addEventListener('click', checkPercentage);
+
+            let subBtn = document.getElementById("subBtn");
+            subBtn.addEventListener('click', launchSub);
+            let partiBtn = document.getElementById("partiBtn");
+            partiBtn.disabled = false;
+            partiBtn.addEventListener('click', checkParti);
+
+            let betBtn = document.getElementById("betBtn");
+            betBtn.disabled = false;
+            betBtn.addEventListener('click', bet);
+
+            let yesBtn = document.getElementById('yesBtn');
+            yesBtn.addEventListener('click', yesBtnClicked);
+            let cancelBtn = document.getElementById('cancelBtn');
+            cancelBtn.addEventListener('click', cancelBtnClicked);
+        }
+
+        /// Import contract data (immediately after betting)
+        async function crawlingData() {
+            let totalBet = document.getElementById("totalBet");
+            totalBet.innerText = await gambleInstance.methods.totalBet().call();
+
+            cntParti = await gambleInstance.methods.numParticipants().call();
+            partiList = [];
+            for (let i = 0; i < cntParti; i++) {
+                let p = await gambleInstance.methods.participants(i).call();
+                partiList.push(p);
+            }
+        }
+
+        /// Main roulette operation
+        async function launchMain() {
+            if (gambleInstance != null) {
+                // Disable main roulette button
+                this.disabled = true;
+                statusBox.innerHTML = "Main Roulette Launching...";
+
+                let mainR = document.getElementById("mainSlot");
+
+                // Generate random numbers (1 <= rNum <= 100)
+                let rNum = await Math.floor(Math.random() * 100) + 1;
+                console.log(rNum);
+
+                let idx = null;
+                if (rNum > 95) {
+                    // Remittance of the entire bet amount to the current participant In case of winning (100~96 / 5%)
+                    idx = 0;
+                } else if (rNum > 90) {
+                    // Remittance of the entire bet amount to a specific participant, in case of winning (95~91 / 5%)
+                    idx = 1;
+                } else if (rNum > 85) {
+                    //Increase betting amount by 1% In case of winning (90~86 / 5%)
+                    idx = 2;
+                } else if (rNum > 80) {
+                    // Increase betting amount by 2% In case of winning (85~81 / 5%)
+                    idx = 3;
+                } else if (rNum > 75) {
+                    // Increase betting amount by 5% In case of winning (80~76 / 5%)
+                    idx = 4;
+                } else {
+                    // PASS (75~1 / 75%)
+                    idx = 5;
+                }
+
+                // Spin the main roulette
+                let i = 0;
+                let cnt = rouletteList.length;
+
+                mainR.classList.add("start");
+                let timer = setInterval(() => {
+                    var k = i % cnt;
+                    mainR.innerHTML = rouletteList[k];
+                    mainR.offsetWidth;
+                    i++
+                }, 200);
+
+                let goToSub = false;
+                await setTimeout(async () => {
+                    clearInterval(timer);
+                    mainR.innerHTML = rouletteList[idx];
+                    mainR.classList.replace("start", "end");
+
+                    try {
+                        if (rNum > 95) {
+                            statusBox.innerHTML = "Remittance of all bets to current participants";
+                            let value = await gambleInstance.methods.sendBetToSomeone(accounts[0]).send({ from: accounts[0] });
+                            resultBox.innerHTML = value.blockHash + " (blockHash)";
+                            statusBox.innerHTML = "Completed remittance of the entire bet amount to the current participant";
+                        } else if (rNum > 90) {
+                            goToSub = true;
+                            let subR = document.getElementById("subSlot");
+                            subR.innerHTML = "Launch Continuing...";
+                            statusBox.innerHTML = "Remittance of the entire bet amount to a specific participant";
+                            // Enable sub roulette button
+                            let subBtn = document.getElementById("subBtn");
+                            subBtn.disabled = false;
+                        } else if (rNum > 85) {
+                            statusBox.innerHTML = "Increase betting amount by 1% Winning";
+                            let value = await gambleInstance.methods.changeRate(1).send({ from: accounts[0] });
+                            resultBox.innerHTML = value.blockHash + " (blockHash)";
+                            statusBox.innerHTML = "1% increase in betting amount completed";
+                        } else if (rNum > 80) {
+                            statusBox.innerHTML = "2% increase in betting amount";
+                            let value = await gambleInstance.methods.changeRate(2).send({ from: accounts[0] });
+                            resultBox.innerHTML = value.blockHash + " (blockHash)";
+                            statusBox.innerHTML = "2% increase in betting amount completed";
+                        } else if (rNum > 75) {
+                            statusBox.innerHTML = "Increase betting amount by 5%";
+                            let value = await gambleInstance.methods.changeRate(5).send({ from: accounts[0] });
+                            resultBox.innerHTML = value.blockHash + " (blockHash)";
+                            statusBox.innerHTML = "5% increase in bet amount increase completed";
+                        } else {
+                            statusBox.innerHTML = "PASS";
+                        }
+
+                        if (!goToSub) {
+                            // Get updated information and move to initial state
+                            initData();
+                        }
+                    } catch (error) {
+                        if (error.code == 4001) {
+                            // Processing when MetaMask transaction reject button is clicked
+                            // MetaMask Transaction Denied Error Code = 4001
+
+                            statusBox.innerHTML = "Denied MetaMask transaction"
+                        } else {
+                            statusBox.innerHTML = "Error occurred, move to initial state"
+                        }
+
+                        // Get updated information and move to initial state
+                        initData();
+                    }
+                }, 4000);
+
+                await setTimeout(async () => {
+                    mainR.classList.remove("end");
+                }, 5000);
+            }
+        }
+
+        /// Sub roulette operation
+        async function launchSub() {
+            if (gambleInstance != null) {
+                // Disable sub button
+                this.disabled = true;
+                statusBox.innerHTML = "Sub Roulette Launching...";
+
+                let subR = document.getElementById("subSlot");
+
+                // Random number generation (0 <= rNum < number of participants)
+
+                let rNum = Math.floor(Math.random() * cntParti);
+                console.log(rNum);
+
+                // spin sub roulette
+                let i = 0;
+
+                subR.classList.add("start");
+                let timer = setInterval(() => {
+                    var k = i % cntParti;
+                    subR.innerHTML = partiList[k].addr.toLowerCase();
+                    subR.offsetWidth;
+                    i++
+                }, 200);
+
+                await setTimeout(async () => {
+                    clearInterval(timer);
+                    //If the current participant finds out that another participant has won, the MetaMask transaction may be rejected.
+                    // Use to prevent participants from knowing which participant has won
+                    subR.innerHTML = "0x????????????????????????????????????????";
+                    subR.classList.replace("start", "end");
+
+                    try {
+                        statusBox.innerHTML = "Complete selection of specific participants";
+                        let value = await gambleInstance.methods.sendBetToSomeone(partiList[rNum].addr).send({ from: accounts[0] });
+                        resultBox.innerHTML = value.blockHash + " (blockHash)";
+                        statusBox.innerHTML = partiList[rNum].addr.toLowerCase() + "Remittance of the entire bet amount to";
+
+                        // Get updated information and move to initial state
+                        initData();
+                    } catch (error) {
+                        if (error.code == 4001) {
+                            //Processing when MetaMask transaction reject button is clicked
+                            // MetaMask Transaction Denied Error Code = 4001
+                            statusBox.innerHTML = "Denied MetaMask transaction"
+                        } else {
+                            statusBox.innerHTML = "Error occurred, move to initial state"
+                        }
+
+                        //Get updated information and move to initial state
+                        initData();
+                    }
+                }, 4000);
+
+                await setTimeout(async () => {
+                    subR.classList.remove("end");
+                }, 5000);
+            }
+        }
+
+        /// bet
+        async function bet() {
+            if (gambleInstance != null) {
+                let val = await document.getElementById("betAmt").value;
+
+                if (val >= parseInt(requireBetAmt)) {
+                    // If the amount entered is more than the minimum required amount
+                    let body = document.querySelector('body');
+                    let check = document.querySelector('.check');
+
+                    check.style.display = "block";
+                    body.style.overflow = 'hidden';
+                    statusBox.innerHTML = "Betting Continuing...";
+                } else {
+                    statusBox.innerHTML = "Enter more than Requirement";
+                }
+
+            }
+        }
+
+        /// Betting => When the Accept button is clicked
+        async function yesBtnClicked() {
+            if (gambleInstance != null) {
+                let body = document.querySelector('body');
+                let check = document.querySelector('.check');
+
+                check.style.display = "none";
+                body.style.overflow = 'auto';
+
+                // Disable bet button
+                let betBtn = document.getElementById("betBtn");
+                betBtn.disabled = true;
+
+                try {
+                    // Bet the amount entered
+                    let val = document.getElementById("betAmt").value;
+                    let value = await gambleInstance.methods.bet().send({ from: accounts[0], value: val });
+                    resultBox.innerHTML = value.blockHash + " (blockHash)";
+                    statusBox.innerHTML = "Betting Completed";
+
+                    // Get Updated Information
+                    await crawlingData();
+
+                    // Activate the main roulette button
+                    let mainBtn = document.getElementById("mainBtn");
+                    mainBtn.disabled = false;
+                    let mainR = document.getElementById("mainSlot");
+                    mainR.innerHTML = "Launch Continuing...";
+                } catch (error) {
+                    if (error.code == 4001) {
+                        // Processing when MetaMask transaction reject button is clicked
+                        // MetaMask Transaction Denied Error Code = 4001
+                        statusBox.innerHTML = "Denied MetaMask transaction"
+                    } else {
+                        statusBox.innerHTML = "Error occurred, move to initial state"
+                    }
+
+                    // Get updated information and move to initial state
+                    initData();
+                }
+            }
+        }
+
+        /// Betting => When the cancel button is clicked
+        async function cancelBtnClicked() {
+            if (gambleInstance != null) {
+                let body = document.querySelector('body');
+                let check = document.querySelector('.check');
+
+                check.style.display = "none";
+                body.style.overflow = 'auto';
+                statusBox.innerHTML = "Betting Canceled";
+            }
+        }
+
+        /// Check participant information
+        async function checkParti() {
+            if (gambleInstance != null) {
+                // Displaying the participant information list modally
+                document.querySelector(".modalTitle").innerHTML = "Participants";
+
+                // Get Participant Information
+                let txt = "";
+                for (let i = 0; i < cntParti; i++) {
+                    txt += "<tr><td class='tg-sej6'>" + partiList[i].addr.substr(0, 27) + "...</td><td class='tg-sej6'>" + partiList[i].amount + "</td></tr>";
+                }
+                document.querySelector(".modalBody").innerHTML = "<table class='tg'><thead><tr><th id='tg1' class='tg-9gjn'>Participants</th><th id='tg2' class='tg-9gjn'>stake</th></tr ></thead ><tbody>" + txt + "</tbody></table >";
+
+                let body = document.querySelector('body');
+                let modal = document.querySelector('.modal');
+                let closeBtn = document.getElementById('closeBtn');
+
+                modal.style.display = "block";
+                body.style.overflow = 'hidden';
+
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = "none";
+                    body.style.overflow = 'auto';
+                });
+            }
+        }
+
+        /// Check roulette odds information
+        async function checkPercentage() {
+            if (gambleInstance != null) {
+                document.querySelector(".modalTitle").innerHTML = "Roulette's Percentage";
+                document.querySelector(".modalBody").innerHTML = "<table class='tg'><thead><tr><th id='tg1' class='tg-9gjn'>detail</th><th id='tg2' class='tg-9gjn'>percentage</th></tr ></thead ><tbody><tr><td class='tg-sej6'>Remittance of all bets to the current participant</td><td class='tg-sej6'>5%</td></tr><tr><td class='tg-sej6'>Remittance of the entire bet amount to a specific participant</td><td class='tg-sej6'>5%</td></tr><tr><td class='tg-sej6'>1% increase in stake increase rate</td><td class='tg-sej6'>5%</td></tr><tr><td class='tg-sej6'>2% increase in stake increase rate</td><td class='tg-sej6'>5%</td></tr><tr><td class='tg-sej6'>5% increase in stake increase rate</td><td class='tg-sej6'>5%</td></tr><tr><td class='tg-sej6'>PASS</td><td class='tg-sej6'>75%</td></tr></tbody></table >";
+
+                // Roulette probability information list modal output
+                let body = document.querySelector('body');
+                let modal = document.querySelector('.modal');
+                let closeBtn = document.getElementById('closeBtn');
+
+                modal.style.display = "block";
+                body.style.overflow = 'hidden';
+
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = "none";
+                    body.style.overflow = 'auto';
+                });
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="middle">
+        <!-- Header -->
+        <div class="mainTitle">GAMBLING</div>
+        <div class="subTitle">Roulette Game&nbsp;<input class="btn join" type="button" id="accountBtn" value="JOIN">
+        </div>
+        <hr />
+
+        <!-- Contract Info -->
+        <div class="totalBetContainer">◦Total :&nbsp;<span id="totalBet">0</span>&nbsp;wei</div>
+        <div class="requireBetContainer">◦Requirement :&nbsp;
+            <span id="requireBet">0</span>&nbsp;(=&nbsp;
+            <span id="baseBet">0</span>&nbsp;/&nbsp;
+            <span id="increaseRate">0</span>%)&nbsp;wei
+        </div>
+        <br />
+
+        <!-- Main Roulette -->
+        <div id="mainRoulette" class="mainRoulette">
+            <div id="mainSlot" class="mainSlot">Main Roulette</div>
+        </div>
+        <div class="mainRBtnContainer"><input class="btn" type="button" id="mainBtn" value="LAUNCH"
+                disabled>&nbsp;<input class="btn" type="button" id="percentageBtn" value="PERCENTAGE" disabled></div>
+        <br />
+
+        <!-- Sub Roulette -->
+        <div id="subRoulette" class="subRoulette">
+            <div id="subSlot" class="subSlot">Sub Roulette</div>
+        </div>
+        <div class="subRBtnContainer"><input class="btn" type="button" id="subBtn" value="LAUNCH" disabled>&nbsp;<input
+                class="btn" type="button" id="partiBtn" value="PARTICIPANTS" disabled></div>
+        <br />
+
+        <!-- Betting Section -->
+        <div class="accountContainer">◦Account :&nbsp;<span id="showAccount">Empty</span></div>
+        <div class="betContainer">◦Betting :&nbsp;
+            <input type="number" value="0" step="100" min="0" id="betAmt">&nbsp;wei&nbsp;
+            <input class="btn submit" type="submit" id="betBtn" value="BET" disabled>
+        </div>
+        <hr />
+
+        <!-- Modal -->
+        <div class="modal">
+            <div class="modalContainer">
+                <div class="modalTitle"></div>
+                <div class="modalBody"></div>
+                <div class="modalBtn">
+                    <input class="btn" type="button" id="closeBtn" value="CLOSE">
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="check">
+            <div class="checkContainer">
+                <div class="checkTitle">Check</div>
+                <div class="checkBody">Are You Sure?</div>
+                <div class="checkBtn">
+                    <input class="btn" type="button" id="yesBtn" value="SURE">
+                    <input class="btn" type="button" id="cancelBtn" value="CANCLE">
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="statusContainer">◦Status :&nbsp;
+            <span id="statusBox">Empty</span>
+        </div>
+        <div class="resultContainer">◦Result :&nbsp;
+            <span id="resultBox">Empty</span>
+        </div>
+    </div>
+</body>
+
+</html>

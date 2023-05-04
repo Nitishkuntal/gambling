@@ -1,0 +1,351 @@
+/* Tag */
+body {
+    margin: 0;
+    padding: 0;
+    background: #2d3436;
+}
+
+hr {
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+div {
+    font-size: 22px;
+    color: rgb(220, 220, 220);
+}
+
+/* Button */
+.btn {
+    font-size: 16px;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    margin-top: 4px;
+    height: 25px;
+    color: rgb(220, 220, 220);
+    background: #2d3436;
+    padding: 2px 12px;
+    border: 1px solid rgb(220, 220, 220);
+    border-radius: 3px;
+    transition: all 0.4s;
+    vertical-align: middle;
+}
+
+.join {
+    height: 24px;
+    margin-top: 1px;
+}
+
+.submit {
+    margin-top: 5px;
+}
+
+.btn:hover {
+    cursor: pointer;
+    color: #2d3436;
+    background: rgb(220, 220, 220);
+}
+
+.btn:disabled {
+    color: #2d3436;
+    background: rgb(220, 220, 220);
+    border: 1px solid rgb(220, 220, 220);
+    border-radius: 3px;
+}
+
+.btn:disabled:hover {
+    cursor: not-allowed;
+}
+
+/* Middle */
+.middle {
+    position: absolute;
+    width: 55%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Title */
+.mainTitle {
+    font: small-caps bold 60px/1 serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.subTitle {
+    font: small-caps bold 25px/1 serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 5px;
+}
+
+/* Input Number */
+#betAmt {
+    margin-top: 5px;
+    font-size: 18px;
+    color: rgb(220, 220, 220);
+    background: #2d3436;
+    border: 1px solid rgb(220, 220, 220);
+    border-radius: 3px;
+    text-align: right;
+}
+
+/* Container */
+.totalBetContainer,
+.requireBetContainer,
+.mainRBtnContainer,
+.subRBtnContainer,
+.accountContainer,
+.betContainer,
+.resultContainer,
+.statusContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.mainRoulette,
+.subRoulette {
+    margin: 0px 10%;
+    padding: 0px 20px;
+    height: 60px;
+    line-height: 60px;
+    border: 1px solid rgb(220, 220, 220);
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+.mainSlot,
+.subSlot {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.showAccount {
+    text-transform: lowercase;
+}
+
+.accountContainer {
+    direction: ltr;
+}
+
+/* Modal */
+.modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.modalContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 380px;
+    height: 350px;
+    padding: 30px;
+    text-align: center;
+    border: 2px solid rgb(220, 220, 220);
+    background-color: #2d3436;
+    border-radius: 20px;
+    transform: translateX(-50%) translateY(-50%);
+    box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+}
+
+.modalTitle {
+    color: rgb(220, 220, 220);
+    font: small-caps bold 28px/1 serif;
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    white-space: nowrap;
+}
+
+.modalBtn {
+    color: black;
+    position: absolute;
+    top: 90.5%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+#closeBtn {
+    width: 100px;
+    height: 27px;
+    font-size: 15px;
+    vertical-align: middle;
+}
+
+.modalBody {
+    position: absolute;
+    width: 80%;
+    height: 65%;
+    top: 52%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    overflow: auto;
+}
+
+/* Check Modal */
+.check {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+}
+
+.checkContainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 380px;
+    height: 100px;
+    padding: 30px;
+    text-align: center;
+    border: 2px solid rgb(220, 220, 220);
+    background-color: #2d3436;
+    border-radius: 20px;
+    transform: translateX(-50%) translateY(-50%);
+    box-shadow: rgba(0, 0, 0, 0.56) 0px 22px 70px 4px;
+}
+
+.checkTitle {
+    color: rgb(220, 220, 220);
+    font: small-caps bold 28px/1 serif;
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    white-space: nowrap;
+}
+
+.checkBtn {
+    color: black;
+    position: absolute;
+    top: 81%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+}
+
+.checkBody {
+    position: absolute;
+    width: 80%;
+    height: 65%;
+    top: 71%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    overflow: auto;
+}
+
+/* Table */
+.tg {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background-color: #2d3436;
+}
+
+.tg td {
+    background-color: #2d3436;
+    border-color: rgb(240, 240, 240);
+    border-style: solid;
+    border-width: 1px;
+    color: rgb(240, 240, 240);
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    overflow: hidden;
+    padding: 10px 5px;
+    word-break: normal;
+}
+
+.tg th {
+    background-color: #2d3436;
+    border-color: rgb(240, 240, 240);
+    border-style: solid;
+    border-width: 1px;
+    color: rgb(240, 240, 240);
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+    overflow: hidden;
+    padding: 10px 5px;
+    word-break: normal;
+}
+
+.tg .tg-sej6 {
+    font-family: "Lucida Console", Monaco, monospace !important;
+    text-align: left;
+    vertical-align: top
+}
+
+.tg .tg-9gjn {
+    font-family: "Lucida Console", Monaco, monospace !important;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: top
+}
+
+/* Animation */
+.mainSlot.start,
+.subSlot.start {
+    animation: 0.2s slot-machine ease-out infinite;
+}
+
+.mainSlot.end,
+.subSlot.end {
+    animation: 0.3s slot-machine-end ease-out;
+}
+
+@keyframes slot-machine {
+    0% {
+        opacity: 0;
+        transform: translateY(35%);
+    }
+
+    25% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(0%);
+    }
+
+    75% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-30%);
+    }
+}
+
+@keyframes slot-machine-end {
+    0% {
+        opacity: 0;
+        transform: translateY(35%);
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0%);
+    }
+}
